@@ -131,6 +131,48 @@ class SuffixTree:
         for child in node.children.values():
             self._get_leaves(child, results)
 
+    def find_approximate_occurrences(self, pattern, max_mismatches=1):
+        """
+        Finds occurrences of the pattern allowing up to `max_mismatches` differences (substitutions).
+        This enables realistic biological mutation searching via DFS traversal.
+        """
+        results = set()
+        pat_len = len(pattern)
+        
+        def search_node(node, pat_idx, mismatches_left):
+            if pat_idx == pat_len:
+                leaves = []
+                self._get_leaves(node, leaves)
+                for leaf in leaves:
+                    results.add(leaf)
+                return
+            
+            for char, child in node.children.items():
+                edge_len = self.edge_length(child)
+                edge_start = child.start
+                
+                # Traverse current edge
+                current_mismatches = mismatches_left
+                edge_idx = 0
+                temp_pat_idx = pat_idx
+                
+                valid_edge = True
+                while edge_idx < edge_len and temp_pat_idx < pat_len:
+                    if pattern[temp_pat_idx] != self.text[edge_start + edge_idx]:
+                        if current_mismatches > 0:
+                            current_mismatches -= 1
+                        else:
+                            valid_edge = False
+                            break
+                    temp_pat_idx += 1
+                    edge_idx += 1
+                
+                if valid_edge:
+                    search_node(child, temp_pat_idx, current_mismatches)
+                    
+        search_node(self.root, 0, max_mismatches)
+        return sorted(list(results))
+
     def longest_repeated_substring(self):
         max_len = 0
         lrs_end_pos = 0

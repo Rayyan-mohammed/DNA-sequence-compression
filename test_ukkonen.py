@@ -152,3 +152,4 @@ if __name__ == "__main__":
     
     t2 = SuffixTree("mississippi$")
     print(t2.longest_repeated_substring())
+

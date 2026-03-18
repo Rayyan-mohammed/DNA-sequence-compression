@@ -18,14 +18,31 @@ A 10/10 bioinformatics tool using Suffix Trees, LZ77 Binary Compression, and K-m
 
 # --- Sidebar Controls ---
 st.sidebar.header("Input Data")
-input_method = st.sidebar.radio("Input Method:", ["Text Input", "Upload FASTA File"])
+input_method = st.sidebar.radio("Input Method:", ["Text Input", "Upload FASTA File", "Fetch from NCBI Cloud"])
 
 sequence = ""
 seq_id = "Custom"
+seq_info = [] # Dissects multi-sequence records (id, start_idx, length)
+
+def process_records(records):
+    """Handles multi-chromosome/multi-strand FASTA records."""
+    seq_parts = []
+    info = []
+    current_idx = 0
+    for rec in records:
+        s = str(rec.seq).upper()
+        s = ''.join(c for c in s if c in 'ACGT') # Sanitize
+        seq_parts.append(s)
+        info.append({'id': rec.id, 'start': current_idx, 'end': current_idx + len(s), 'length': len(s)})
+        current_idx += len(s) + 1 # +1 for the separator '#'
+    
+    return "#".join(seq_parts), info, " | ".join([r.id for r in records])
 
 if input_method == "Text Input":
-    sequence = st.sidebar.text_area("Enter DNA Sequence:", "ACGTACGTGACG").upper().replace("\n", "").replace(" ", "")
-else:
+    raw_seq = st.sidebar.text_area("Enter DNA Sequence:", "ACGTACGTGACG").upper().replace("\n", "").replace(" ", "")
+    sequence = ''.join(c for c in raw_seq if c in 'ACGT')
+    seq_info = [{'id': 'Custom', 'start': 0, 'end': len(sequence), 'length': len(sequence)}]
+elif input_method == "Upload FASTA File":
     uploaded_file = st.sidebar.file_uploader("Upload a .fasta file", type=["fasta", "fa", "txt"])
     if uploaded_file is not None:
         try:
@@ -34,17 +51,44 @@ else:
             from io import StringIO
             records = list(SeqIO.parse(StringIO(stringio), "fasta"))
             if records:
-                sequence = str(records[0].seq).upper()
-                seq_id = records[0].id
-                st.sidebar.success(f"Loaded {seq_id} (Length: {len(sequence)})")
+                sequence, seq_info, seq_id = process_records(records)
+                st.sidebar.success(f"Loaded {len(records)} Strands (Length: {len(sequence.replace('#',''))})")
         except Exception as e:
             st.sidebar.error(f"Error parsing file: {e}")
+elif input_method == "Fetch from NCBI Cloud":
+    st.sidebar.info("Fetch real genomes directly from NCBI (e.g., NC_045512 for SARS-CoV-2)")
+    ncbi_email = st.sidebar.text_input("Your Email (Required by NCBI):", "example@gmail.com")
+    accession_id = st.sidebar.text_input("Accession ID:", "NC_045512")
+    if st.sidebar.button("Fetch Genome"):
+        if accession_id and ncbi_email:
+            with st.sidebar.status(f"Fetching {accession_id} from NCBI..."):
+                try:
+                    from Bio import Entrez
+                    Entrez.email = ncbi_email
+                    handle = Entrez.efetch(db="nucleotide", id=accession_id, rettype="fasta", retmode="text")
+                    records = list(SeqIO.parse(handle, "fasta"))
+                    handle.close()
+                    
+                    if records:
+                        f_seq, f_info, f_id = process_records(records)
+                        st.session_state['fetched_seq'] = f_seq
+                        st.session_state['fetched_id'] = f_id
+                        st.session_state['fetched_info'] = f_info
+                        st.sidebar.success(f"Success! Fetched {len(records)} records (Length: {len(f_seq.replace('#',''))} bases).")
+                except Exception as e:
+                    st.sidebar.error(f"Network/ID Error: {e}")
 
-# Validate sequence
-sequence = ''.join(c for c in sequence if c in 'ACGT')
+    # Restore from session if already fetched
+    if 'fetched_seq' in st.session_state:
+        sequence = st.session_state['fetched_seq']
+        seq_id = st.session_state['fetched_id']
+        seq_info = st.session_state['fetched_info']
 
+# Ensure sequence exists before replacing UI
 if st.sidebar.button("Analyze & Compress", type="primary"):
-    if len(sequence) < 3:
+    # Strip delimiters for validation check
+    valid_len = len(sequence.replace('#', ''))
+    if valid_len < 3:
         st.error("Please enter a DNA sequence of at least 3 valid bases (A, C, G, T).")
     else:
         # Progress Bar Logic
@@ -206,10 +250,12 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
 # Separated search input so it works without requiring re-building the tree
 if 'tree' in st.session_state:
     st.divider()
-    search_col1, search_col2 = st.columns([3, 1])
+    search_col1, search_col2, search_col3 = st.columns([2, 1, 1])
     with search_col1:
         pattern = st.text_input("Enter DNA Motif/Pattern to search:", key="search_bar").upper()
     with search_col2:
+        mismatches = st.number_input("Allowed Mismatches (Fuzzy Search):", min_value=0, max_value=5, value=0, step=1, help="Simulates Biological Mutations (SNPs)")
+    with search_col3:
         st.write("") # Spacer
         st.write("") # Spacer
         reverse_comp = st.checkbox("Also Search Reverse Complement", value=True)
@@ -220,12 +266,18 @@ if 'tree' in st.session_state:
             tree = st.session_state['tree']
             seq = st.session_state['sequence']
             
-            results = tree.find_all_occurrences(pattern)
+            if mismatches == 0:
+                results = tree.find_all_occurrences(pattern)
+            else:
+                results = tree.find_approximate_occurrences(pattern, max_mismatches=mismatches)
             
             if reverse_comp:
                 complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
                 rc_pattern = "".join(complement.get(c, c) for c in reversed(pattern))
-                rc_results = tree.find_all_occurrences(rc_pattern)
+                if mismatches == 0:
+                    rc_results = tree.find_all_occurrences(rc_pattern)
+                else:
+                    rc_results = tree.find_approximate_occurrences(rc_pattern, max_mismatches=mismatches)
                 st.write(f"Reverse Complement (`{rc_pattern}`): Found {len(rc_results)} times")
                 results.extend(rc_results)
                 
