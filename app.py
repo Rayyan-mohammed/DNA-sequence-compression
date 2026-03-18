@@ -87,7 +87,8 @@ elif input_method == "Fetch from NCBI Cloud":
 # Ensure sequence exists before replacing UI
 if st.sidebar.button("Analyze & Compress", type="primary"):
     # Strip delimiters for validation check
-    valid_len = len(sequence.replace('#', ''))
+    pure_sequence = sequence.replace('#', '')
+    valid_len = len(pure_sequence)
     if valid_len < 3:
         st.error("Please enter a DNA sequence of at least 3 valid bases (A, C, G, T).")
     else:
@@ -102,6 +103,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         tree = SuffixTree(tree_seq)
         st.session_state['tree'] = tree
         st.session_state['sequence'] = sequence
+        st.session_state['pure_sequence'] = pure_sequence
         
         progress_bar.progress(50, text="Analyzing Biological Metrics...")
         
@@ -114,19 +116,19 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
             progress_bar.progress(70, text="Running LZ77 Binary Compression Engine...")
             
             col1, col2, col3 = st.columns(3)
-            col1.metric("Original Length", f"{len(sequence)} bases")
-            original_bytes = len(sequence) # Assuming 1 byte per ASCII char
+            col1.metric("Original Length", f"{len(pure_sequence)} bases")
+            original_bytes = len(pure_sequence) # Assuming 1 byte per ASCII char
             col1.caption(f"Original size: {original_bytes} bytes (ASCII)")
             
             # 1. 2-Bit Compression
-            two_bit_data, pad = encode_2bit(sequence)
+            two_bit_data, pad = encode_2bit(pure_sequence)
             two_bit_size = len(two_bit_data)
             col2.metric("2-Bit Encoding Size", f"{two_bit_size} bytes", f"{(1 - two_bit_size/original_bytes)*100:.1f}% reduction")
             
             # 2. LZ77 Compression
             with st.spinner("Running LZ77 Compression..."):
                 compressor = LZ77Compressor()
-                lz77_tuples = compressor.compress(sequence)
+                lz77_tuples = compressor.compress(pure_sequence)
                 lz77_bytes, lz77_pad = serialize_lz77(lz77_tuples)
                 lz77_size = len(lz77_bytes)
                 
@@ -143,21 +145,39 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                 from compression import deserialize_lz77
                 with st.spinner("Decoding binary stream..."):
                     restored_sequence = deserialize_lz77(lz77_bytes)
-                    if restored_sequence == sequence:
+                    if restored_sequence == pure_sequence:
                         st.success("✅ DECOMPRESSION SUCCESS: The unpacked binary exactly matches the original DNA Sequence with zero loss!")
                     else:
                         st.error("❌ DECOMPRESSION FAILED: Data got corrupted.")
-                        st.write(f"Original Length: {len(sequence)}")
+                        st.write(f"Original Length: {len(pure_sequence)}")
                         st.write(f"Restored Length: {len(restored_sequence)}")
 
         with tab2:
                 st.header("Biological Analysis")
                 
+                # NEW: Circos Plot Mapping (Proportional to lengths)
+                if 'seq_info' in st.session_state and len(st.session_state['seq_info']) > 1:
+                    st.subheader("Multi-Chromosome Mappings (Circos-Style Polar Representation)")
+                    chrom_names = [info['id'] for info in st.session_state['seq_info']]
+                    chrom_lens = [info['length'] for info in st.session_state['seq_info']]
+                    
+                    fig_circos = px.bar_polar(
+                        r=[1] * len(chrom_names),
+                        theta=chrom_names,
+                        color=chrom_names,
+                        template="plotly_white",
+                        title="Genome Architecture (Proportional Ring Tracks)",
+                        color_discrete_sequence=px.colors.qualitative.Pastel
+                    )
+                    fig_circos.update_traces(width=[(l/sum(chrom_lens))*360 for l in chrom_lens]) 
+                    fig_circos.update_layout(polar=dict(radialaxis=dict(visible=False)))
+                    st.plotly_chart(fig_circos)
+                
                 # 1. K-mer Analysis
                 st.subheader("1. K-mer Frequency Analysis")
                 st.write("K-mers are substrings of length `k`. Finding frequent K-mers is vital for genome assembly and identifying regulatory motifs.")
                 k_val = st.slider("Select K-mer length (k):", min_value=2, max_value=12, value=3)
-                top_kmers = get_top_kmers(sequence, k=k_val, top_n=10)
+                top_kmers = get_top_kmers(pure_sequence, k=k_val, top_n=10)
                 
                 if top_kmers:
                     kmer_labels = [item[0] for item in top_kmers]
@@ -173,7 +193,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                 # 2. Tandem Repeats
                 st.subheader("2. Tandem Repeats (STRs / VNTRs)")
                 st.write("Tandem repeats occur when a pattern of nucleotides repeats directly back-to-back. These are often used as genetic markers for diseases or DNA profiling.")
-                tandems = find_tandem_repeats(sequence)
+                tandems = find_tandem_repeats(pure_sequence)
                 if tandems:
                     import pandas as pd
                     st.dataframe(pd.DataFrame(tandems), hide_index=True, use_container_width=True)
@@ -188,8 +208,8 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                 
                 # 4. Nucleotide Composition (Plotly)
                 st.subheader("4. Global Composition")
-                counts = {'A': sequence.count('A'), 'C': sequence.count('C'), 
-                          'G': sequence.count('G'), 'T': sequence.count('T')}
+                counts = {'A': pure_sequence.count('A'), 'C': pure_sequence.count('C'), 
+                          'G': pure_sequence.count('G'), 'T': pure_sequence.count('T')}
                 fig = px.bar(x=list(counts.keys()), y=list(counts.values()), 
                              labels={'x': 'Nucleotide', 'y': 'Frequency'},
                              title="Nucleotide Composition",
@@ -198,11 +218,11 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                 st.plotly_chart(fig)
                 
                 st.subheader("GC-Content Window Analysis")
-                window_size = max(10, len(sequence)//20)
+                window_size = max(10, len(pure_sequence)//20)
                 if window_size > 0:
                     gc_content = []
-                    for i in range(0, len(sequence) - window_size + 1, max(1, window_size//5)):
-                        window = sequence[i:i+window_size]
+                    for i in range(0, len(pure_sequence) - window_size + 1, max(1, window_size//5)):
+                        window = pure_sequence[i:i+window_size]
                         gc = (window.count('G') + window.count('C')) / window_size * 100
                         gc_content.append((i, gc))
                     
@@ -226,7 +246,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                         "Tandem Repeat Loci Count"
                     ],
                     "Value": [
-                        len(sequence),
+                        len(pure_sequence),
                         counts['A'], counts['C'], counts['G'], counts['T'],
                         len(lrs),
                         len(tandems) if tandems else 0
@@ -286,7 +306,28 @@ if 'tree' in st.session_state:
             if results:
                 # Show results in a dataframe/table
                 import pandas as pd
-                df = pd.DataFrame({"Position (Index)": sorted(list(set(results)))})
+                unique_results = sorted(list(set(results)))
+                
+                # Check for chromosomal mapping
+                if 'seq_info' in st.session_state and len(st.session_state['seq_info']) > 1:
+                    mapped_results = []
+                    for pos in unique_results:
+                        current_offset = 0
+                        found_chrom = "Unknown"
+                        local_pos = pos
+                        for chrom in st.session_state['seq_info']:
+                            # Length + 1 for the '#' separator in the tree sequence
+                            if pos < current_offset + chrom['length']:
+                                found_chrom = chrom['id']
+                                local_pos = pos - current_offset
+                                break
+                            current_offset += chrom['length'] + 1 
+                        mapped_results.append({"Global Position": pos, "Chromosome": found_chrom, "Local Position": local_pos})
+                    
+                    df = pd.DataFrame(mapped_results)
+                else:
+                    df = pd.DataFrame({"Position (Index)": unique_results})
+                    
                 st.dataframe(df, use_container_width=True)
                 
                 # Download search results
