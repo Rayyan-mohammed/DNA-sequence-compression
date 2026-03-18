@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 from suffix_tree import SuffixTree, compress_sequence
-from compression import encode_2bit, LZ77Compressor, serialize_lz77
+from lz77_compression import encode_2bit, LZ77Compressor, serialize_lz77
 from analytics import get_top_kmers, find_tandem_repeats
 from io import BytesIO
 import time
@@ -142,7 +142,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
 
             st.subheader("Decompression Decoder Test")
             if st.button("Test Payload Decompression Validity"):
-                from compression import deserialize_lz77
+                from lz77_compression import deserialize_lz77
                 with st.spinner("Decoding binary stream..."):
                     restored_sequence = deserialize_lz77(lz77_bytes)
                     if restored_sequence == pure_sequence:
