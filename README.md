@@ -1,94 +1,84 @@
-# 🧬 DNA Core: Advanced Genomic Compression & Analytics Dashboard
+﻿# 🧬 Advanced DNA Sequence Compression & Analytics
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)
-![Algorithms](https://img.shields.io/badge/Algorithms-O(n)-brightgreen)
-![Bioinformatics](https://img.shields.io/badge/Domain-Bioinformatics-purple)
+A comprehensive bioinformatics and computer science portfolio project built to perform industry-grade analysis, binary compression, and visualization of genetic data. 
 
-**DNA Core** is a sophisticated, high-performance bioinformatics platform designed for the compression, analysis, and visualization of genomic sequences. 
+Built using **Python 3**, **Streamlit**, and **Plotly**, this application bridges the gap between raw data manipulation and interactive biological research. It features highly optimized data structures (O(n) Suffix Trees), classical string transformations (BWT), and modern Machine Learning heuristics.
 
-Originally conceived as a rudimentary sequence compressor, this project has been engineered into a "10/10" professional-grade suite featuring $O(n)$ pattern matching, true byte-level binary compression workflows, and direct data pipelines to the National Center for Biotechnology Information (NCBI).
+## ✨ Features & Capabilities
 
----
+### 🗜️ 1. High-Performance Text Algorithms (Compression & Searching)
+*   **Ukkonen's Suffix Tree (O(n)):** Builds an exact suffix tree for the entire sequence in linear time. Used for sub-string searching, extracting Longest Repeated Substrings (LRS), and feeding exact pattern matches.
+*   **LZ77 Binary Compression:** Translates repetitive DNA motifs into (distance, length, character) back-references and serializes the output directly to binary .bin files, reducing genetic map sizes significantly.
+*   **2-Bit Nucleotide Encoding:** An industry-standard mathematical compression mapping A, C, G, T to deterministic 2-bit bytes representing a hard 75% structural reduction.
+*   **Burrows-Wheeler Transform (BWT):** Employs string block rotations and lexicographical sorting, paving the way for maximum RLE (Run-Length Encoding) often used in modern aligners like Bowtie & BWA.
 
-## ✨ Key Features
+### 🔬 2. Biological Analytics & The Central Dogma
+*   **Pairwise Sequence Alignment:** Dynamic Programming (Needleman-Wunsch / Smith-Waterman) to compute genetic similarity score maps with adjustable gap/mismatch penalties (O(N*M) complexity constraint).
+*   **Open Reading Frame (ORF) Detection:** Dynamically scans the DNA sequence for ATG (Start) and TAA/TAG/TGA (Stop) codons, automatically compiling the longest protein-coding amino acid chains.
+*   **K-mer Motif Polling:** A sliding window computational matrix tracking the frequency of K-length sequences representing repeating fragments. 
+*   **Tandem Repeats Finder:** Extracts continuous short tandem repeats (STRs/VNTRs) commonly used in forensic criminal genetics.
 
-### 🚀 1. Algorithmic High-Performance Engine
-* **Ukkonen's Suffix Tree ($O(n)$):** Implements a true linear-time Suffix Tree algorithm. Bypasses naive recursive limits, allowing for instantaneous indexing and pattern matching on massive string structures.
-* **Fuzzy Pattern Matching (DFS):** Search for DNA motifs with mathematically configurable mismatch allowances (Levenshtein distances) to simulate and detect real biological mutations/SNPs.
-* **Reverse Complement Scans:** Automatically processes and queries complementary bounding strands concurrently.
+### 🤖 3. Predictive Modeling (AI Diagnostics)
+*   **DNABERT Model Simulation:** Hooks into the Hugging Face 	ransformers layout logic to analyze genetic text context and estimate Promoter site confidence scores, mapping possible regulatory areas (simulated within Streamlit constraints).
 
-### 💾 2. True Binary Compression
-* **LZ77 Sliding Window:** Maps and tokenizes repeated tandem substrings dynamically.
-* **2-Bit Sequence Encoding:** Converts standard 8-bit ASCII representations (A, C, G, T) into tightly packed 2-bit architectural binary arrays (`.bin`), cutting baseline file sizes by explicitly 75% before LZ77 logic is applied. 
-* **Zero-Loss Decoder System:** Includes a live validation parser testing payload integrity (Decompression testing mechanism).
+### 🖥️ 4. 3D WebGL Protein Rendering
+*   **PDB Atomic Integrations:** Utilizes py3Dmol and stmol to interactively render crystal structures directly within the UI. Real-time zooming and spatial tracking for representations of AlphaFold or known X-Ray structures.
 
-### 🧬 3. Biological Analytics & Multi-Chromosome Architecture
-* **Circos-Style Polar Plots:** If an uploaded FASTA file/NCBI fetch contains multiple genes/chromosomes, it beautifully renders proportional ring tracks depicting the literal genome architecture via Plotly.
-* **K-mer Frequency Mapping:** Computes sequence substrings for isolating regulatory motifs.
-* **Tandem Repeat (STR/VNTR) Detection:** Automatically detects back-to-back repetitive markers using continuous contiguous sequence scanning.
-* **GC-Content Sliding Windows:** Uses interval overlapping sequences to output interactive graphs mapping GC vs. AT concentrations (critical for targeting horizontal gene transfers).
-
-### ☁️ 4. Cloud Interoperability Hub
-* **Direct NCBI Fetching (`Entrez`):** Skip local `.fasta` files. Directly type Sequence Accession IDs (e.g., `NM_000207.3`) into the app, and it will fetch the live verified genomic code over the cloud in seconds.
-* **Multi-Coordinate Tracing:** Safely parses concatenated genome datasets using bounded strict `#` characters, ensuring overlapping calculations report absolute physical offsets mapping correctly to exact chromosome targets.
+### 📡 5. Direct Data Bridging
+*   **Integrated Sample References:** Local mappings of COVID-19, Human BRCA1, E.coli, and Synthetic datasets.
+*   **NCBI Entrez Cloud Sync:** Allows direct pulling of .fasta structures from the National Center for Biotechnology Information (NCBI) using valid Accession IDs. 
 
 ---
 
-## 📂 Project Structure
-
-```text
-📁 DNA Sequence Compression/
-│
-├── 📄 app.py              # Main Streamlit dashboard orchestrating the UI and Logic.
-├── 📄 suffix_tree.py      # Core implementation of Ukkonen's O(n) Suffix Tree algorithm.
-├── 📄 compression.py      # Contains the LZ77 Compressor, 2-bit encoders, and deserializer engines.
-├── 📄 analytics.py        # Abstract computational logic for K-Mers, STRs, and bio-metrics.
-├── 📄 README.md           # Documentation for the project.
-└── 📂 .venv/              # Isolated Python Virtual Environment.
-```
+## 🛠️ Tech Stack
+*   **Languages:** Python 3.11+
+*   **Core Libraries:** streamlit, pandas, 
+umpy, iopython, plotly
+*   **Advanced Rendering:** stmol, py3Dmol
+*   **Environment:** Mapped via equirements.txt for out-of-the-box Streamlit Community Cloud hosting.
 
 ---
 
-## 🛠️ Installation & Setup
+## 🚀 Installation & Local Development
 
-1. **Clone the Repository** and navigate to your folder:
-   ```bash
-   cd "DNA Sequence Compression"
-   ```
+1. **Clone the repository:**
+   \\\ash
+   git clone https://github.com/Rayyan-mohammed/DNA-sequence-compression.git
+   cd DNA-sequence-compression
+   \\\
 
-2. **Activate your Virtual Environment** (depending on your OS):
-   * *Windows (PowerShell):*
-     ```powershell
-     .\.venv\Scripts\Activate.ps1
-     ```
-   * *Mac/Linux:*
-     ```bash
-     source .venv/bin/activate
-     ```
+2. **Create a Virtual Environment (Optional but Recommended):**
+   \\\ash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows use: .venv\Scripts\Activate
+   \\\
 
-3. **Install Requirements:** (If not already installed)
-   Ensure you have the required operational libraries:
-   ```bash
-   pip install streamlit plotly pandas biopython
-   ```
+3. **Install Dependencies:**
+   \\\ash
+   pip install -r requirements.txt
+   \\\
 
----
-
-## 💻 Usage
-
-Run the web dashboard directly from your terminal using:
-
-```bash
-streamlit run app.py
-```
-
-### Navigating the UI:
-1. **Input Parameters:** Use the sidebar to either upload a `.fasta` file or enter a valid NCBI Reference Sequence ID.
-2. **Compression:** Navigate to the `Compression` tab to encode your string and download tightly packed `.bin` files. Verify decompression using the built-in validator.
-3. **Sequence Analytics:** Use the `Sequence Analytics` tab to visually map chromosomes, parse out K-mers, review Tandem Repeats, and interact with the physical distribution of GC mapping.
-4. **Search Engine:** Enter the `Search Engine` tab to use the Suffix Tree to instantly query your strand. Tweak the **Fuzzy Search Mismatches** slider to account for biological variances!
+4. **Launch the Application:**
+   \\\ash
+   streamlit run app.py
+   \\\
+   
+5. **Using the App:**
+   - Select an input method from the sidebar (Text, Local FASTA, Datasets, or NCBI).
+   - Press **Analyze & Compress**.
+   - Navigate the top Tabs to explore different algorithms (Compression, Alignment, BWT, 3D Proteins).
 
 ---
 
-*Project successfully evolved into a real-world scientific analytical model.*
+## 📝 File Overview
+*   **\pp.py\**: Main entry point; builds Streamlit UI layout and manages state caching.
+*   **\suffix_tree.py\**: Ukkonen's O(n) Suffix Tree algorithm implementation logic.
+*   **\lz77_compression.py\**: Serialization mapping and 2-bit + LZ77 encoder models.
+*   **\nalytics.py\**: K-mers, Tandem Repeats, ORFs, and Smith-Waterman matrices.
+*   **\wt.py\**: Burrows-Wheeler formatting mathematics.
+*   **\	ab_components.py\**: Modular abstraction isolating heavy UI elements from the main application thread.
+*   **\i_engine.py\**: Simulated NLP transformer heuristic engine setup.
+
+---
+
+*This application was successfully designed to marry intense backend computer science optimization to intuitive, interactive frontend biology capabilities.*
