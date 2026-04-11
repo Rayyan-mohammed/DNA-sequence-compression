@@ -136,7 +136,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         progress_bar.progress(50, text="Analyzing Biological Metrics...")
         
         # --- Tabbed Interface ---
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Compression", "Sequence Analytics", "Search Engine", "AI Diagnostics", "Genes & Alignment"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Compression", "Sequence Analytics", "Search Engine", "AI Diagnostics", "Genes & Alignment", "BWT & 3D Protein"])
         
         with tab1:
             st.header("Binary & Semantic Compression")
@@ -324,6 +324,10 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         with tab5:
             from tab_components import render_tab5
             render_tab5(pure_sequence, px)
+            
+        with tab6:
+            from tab_components import render_tab6
+            render_tab6(pure_sequence, px)
 
 # Separated search input so it works without requiring re-building the tree
 if 'tree' in st.session_state:

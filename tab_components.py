@@ -60,3 +60,46 @@ def render_tab5(pure_sequence, p_x):
                 total_len = max(len(a1), 1)
                 if total_len > 0:
                     st.progress(matches / total_len, text=f"Total Genetic Conservation Map: {(matches / total_len)*100:.1f}%")
+import time
+import streamlit as st
+import py3Dmol
+from stmol import showmol
+from bwt import get_bwt
+
+def render_tab6(pure_sequence, px):
+    st.header('🗜️ Burrows-Wheeler Transform (BWT) & FM-Index')
+    st.write('The industry standard mapping technique behind Bowtie/BWA sequence aligners. Instead of simple LZ77 pattern references, BWT cyclically clusters matching characters locally forming massive identical runs perfect for Run-Length Encodings (RLE).')
+    
+    bwt_col, rle_col = st.columns(2)
+    with bwt_col:
+        st.subheader('BWT Encoding Engine')
+        run_bwt = st.button('Transform DNA via BWT Matrix')
+        if run_bwt:
+            with st.spinner('Generating Matrix Map... (Capped at 5000 bases for UI memory)'):
+                start = time.time()
+                bwt_str, was_capped = get_bwt(pure_sequence, max_len=5000)
+                st.metric('Transformation Time', f'{time.time() - start:.3f}s')
+                st.success('Successfully generated BWT!')
+                import re
+                rle = [(m.group(1), len(m.group(0))) for m in re.finditer(r'(.)\\1*', bwt_str)]
+                avg_run = sum(l for c, l in rle) / len(rle)
+                st.write(f'**Average Consecutive Run-Length:** {avg_run:.2f} chars (Higher = Better Compression)')
+                st.text_area('Last-Column Matrix Extract (BWT Output):', bwt_str, height=200)
+
+    st.divider()
+    st.header('🔬 3D Protein Visualizer: The Central Dogma Result')
+    st.write('When DNA Translates into massive structural biology! This WebGL viewer allows real-time interactive atomic mapping.')
+    st.info('Select a representative structural map. Translating random motifs directly into 3D requires advanced alpha-folding grids. We map known crystal layouts.')
+    
+    view_opt = st.selectbox('Select PDB Render Structure:', ['DNA Double-Helix (1BNA)', 'COVID-19 Protease (6LU7)', 'Human Hemoglobin (2HHB)'])
+    pdb_map = {'DNA Double-Helix (1BNA)': '1BNA', 'COVID-19 Protease (6LU7)': '6LU7',  'Human Hemoglobin (2HHB)': '2HHB'}
+
+    if st.button('Render Atomic Molecule', type='primary'):
+        with st.spinner('Fetching PDB layout and mounting WebGL...'):
+            viewer = py3Dmol.view(query=f\'pdb:{pdb_map[view_opt]}\')
+            viewer.setStyle({'stick': {}})
+            viewer.addSurface(py3Dmol.VDW, {'opacity': 0.5, 'color': 'spectrum'})
+            viewer.zoomTo()
+            viewer.spin(True)
+            showmol(viewer, height=500, width=800)
+            st.success('Atomic Map successfully rendered. Use your mouse to click and drag to view structure limits.')
