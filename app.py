@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import numpy as np
 from suffix_tree import SuffixTree, compress_sequence
 from lz77_compression import encode_2bit, LZ77Compressor, serialize_lz77
-from analytics import get_top_kmers, find_tandem_repeats
+from analytics import get_top_kmers, find_tandem_repeats, find_orfs, smith_waterman_alignment, find_orfs, smith_waterman_alignment
 from io import BytesIO
 import time
 from Bio import SeqIO
@@ -136,7 +136,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         progress_bar.progress(50, text="Analyzing Biological Metrics...")
         
         # --- Tabbed Interface ---
-        tab1, tab2, tab3, tab4 = st.tabs(["Compression", "Sequence Analytics", "Search Engine", "AI Diagnostics"])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Compression", "Sequence Analytics", "Search Engine", "AI Diagnostics", "Genes & Alignment"])
         
         with tab1:
             st.header("Binary & Semantic Compression")
@@ -320,6 +320,10 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
                             st.warning("This DNA chunk structurally resembles a non-promoter/coding region.")
                 else:
                     st.error(f"AI Engine failed to boot: {engine.error_msg}")
+
+        with tab5:
+            from tab_components import render_tab5
+            render_tab5(pure_sequence, px)
 
 # Separated search input so it works without requiring re-building the tree
 if 'tree' in st.session_state:
