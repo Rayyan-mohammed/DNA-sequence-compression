@@ -44,6 +44,9 @@ def render_tab5(pure_sequence, p_x):
         val_gap = st.number_input("Grid: Gap/Splice Penalty", max_value=-1, value=-2, step=1)
 
     if st.button("Launch Needleman-Wunsch / Smith-Waterman Alignment Engine"):
+        st.session_state['run_alignment'] = True
+
+    if st.session_state.get('run_alignment'):
         if len(cmp_seq) < 3 or len(pure_sequence) < 3:
             st.error("Both inputs must contain structural bases for calculation.")
         elif len(cmp_seq) > 2000 or len(pure_sequence) > 2000:
@@ -75,6 +78,9 @@ def render_tab6(pure_sequence, px):
         st.subheader('BWT Encoding Engine')
         run_bwt = st.button('Transform DNA via BWT Matrix')
         if run_bwt:
+            st.session_state['run_bwt'] = True
+            
+        if st.session_state.get('run_bwt'):
             with st.spinner('Generating Matrix Map... (Capped at 5000 bases for UI memory)'):
                 start = time.time()
                 bwt_str, was_capped = get_bwt(pure_sequence, max_len=5000)
@@ -95,8 +101,13 @@ def render_tab6(pure_sequence, px):
     pdb_map = {'DNA Double-Helix (1BNA)': '1BNA', 'COVID-19 Protease (6LU7)': '6LU7',  'Human Hemoglobin (2HHB)': '2HHB'}
 
     if st.button('Render Atomic Molecule', type='primary'):
+        st.session_state['render_3d'] = True
+        st.session_state['render_opt'] = view_opt
+        
+    if st.session_state.get('render_3d'):
         with st.spinner('Fetching PDB layout and mounting WebGL...'):
-            viewer = py3Dmol.view(query=f\'pdb:{pdb_map[view_opt]}\')
+            render_id = pdb_map[st.session_state['render_opt']]
+            viewer = py3Dmol.view(query=f'pdb:{render_id}')
             viewer.setStyle({'stick': {}})
             viewer.addSurface(py3Dmol.VDW, {'opacity': 0.5, 'color': 'spectrum'})
             viewer.zoomTo()
