@@ -136,7 +136,7 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         progress_bar.progress(50, text="Analyzing Biological Metrics...")
         
         # --- Tabbed Interface ---
-        tab1, tab2, tab3 = st.tabs(["Compression", "Sequence Analytics", "Search Engine"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Compression", "Sequence Analytics", "Search Engine", "AI Diagnostics"])
         
         with tab1:
             st.header("Binary & Semantic Compression")
@@ -294,6 +294,32 @@ if st.sidebar.button("Analyze & Compress", type="primary"):
         with tab3:
             st.header("O(m) Fast Suffix Tree Search")
             st.info("The Suffix tree guarantees O(m) search time (where m is the length of your query) regardless of how massive the genome gets.")
+
+        with tab4:
+            st.header("Transformer AI Engine: DNABERT Architecture")
+            st.write("Leveraging Hugging Face `transformers` to predict promoter sites using a simulated AI context.")
+            st.info("Large machine learning models (100M+ Parameters) use significant memory. Streamlit Cloud may throttle deep learning inference.")
+            
+            if st.button("Initialize & Run DNABERT Pipeline", key="run_ai"):
+                from ai_engine import get_ai_engine
+                engine = get_ai_engine()
+                
+                # Try to load the model (simulated or real dependent on constraints)
+                if not engine.is_loaded:
+                    engine.load_model()
+                
+                if engine.is_loaded:
+                    with st.spinner("Running deep learning sequence classification on first 500 bases..."):
+                        results = engine.predict_promoter(pure_sequence)
+                        st.subheader("Model Diagnostic Results")
+                        st.json(results)
+                        
+                        if results['prediction'] == "Promoter Region":
+                            st.success("🔬 High probability that this chunk initiates genetic transcription! (Regulatory Sequence)")
+                        else:
+                            st.warning("This DNA chunk structurally resembles a non-promoter/coding region.")
+                else:
+                    st.error(f"AI Engine failed to boot: {engine.error_msg}")
 
 # Separated search input so it works without requiring re-building the tree
 if 'tree' in st.session_state:
