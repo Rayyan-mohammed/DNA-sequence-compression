@@ -18,7 +18,7 @@ A 10/10 bioinformatics tool using Suffix Trees, LZ77 Binary Compression, and K-m
 
 # --- Sidebar Controls ---
 st.sidebar.header("Input Data")
-input_method = st.sidebar.radio("Input Method:", ["Text Input", "Upload FASTA File", "Fetch from NCBI Cloud"])
+input_method = st.sidebar.radio("Input Method:", ["Text Input", "Sample Dataset", "Upload FASTA File", "Fetch from NCBI Cloud"])
 
 sequence = ""
 seq_id = "Custom"
@@ -42,6 +42,34 @@ if input_method == "Text Input":
     raw_seq = st.sidebar.text_area("Enter DNA Sequence:", "ACGTACGTGACG").upper().replace("\n", "").replace(" ", "")
     sequence = ''.join(c for c in raw_seq if c in 'ACGT')
     seq_info = [{'id': 'Custom', 'start': 0, 'end': len(sequence), 'length': len(sequence)}]
+elif input_method == "Sample Dataset":
+    import os
+    st.sidebar.info("Load curated industry datasets instantly.")
+    sample_choice = st.sidebar.selectbox("Select Benchmark Dataset", [
+        "Synthetic Tandem Repeats (100k bp) - LZ77 Proof",
+        "SARS-CoV-2 (COVID-19) Whole Genome (30k bp)",
+        "E. coli Bacteria Fragment (100k bp)",
+        "Human BRCA1 Gene Repair Block (50k bp)"
+    ])
+    
+    file_map = {
+        "Synthetic Tandem Repeats (100k bp) - LZ77 Proof": "datasets/synthetic_tandem.fasta",
+        "SARS-CoV-2 (COVID-19) Whole Genome (30k bp)": "datasets/covid_19.fasta",
+        "E. coli Bacteria Fragment (100k bp)": "datasets/ecoli_snippet.fasta",
+        "Human BRCA1 Gene Repair Block (50k bp)": "datasets/brca1_human.fasta"
+    }
+    target_file = file_map[sample_choice]
+    
+    if os.path.exists(target_file):
+        try:
+            records = list(SeqIO.parse(target_file, "fasta"))
+            sequence, seq_info, seq_id = process_records(records)
+            st.session_state['seq_info'] = seq_info
+            st.sidebar.success(f"✓ Loaded {len(sequence.replace('#',''))} bases from {sample_choice}")
+        except Exception as e:
+            st.sidebar.error(f"Failed to load dataset: {e}")
+    else:
+        st.sidebar.error(f"Dataset block missing ({target_file}).")
 elif input_method == "Upload FASTA File":
     uploaded_file = st.sidebar.file_uploader("Upload a .fasta file", type=["fasta", "fa", "txt"])
     if uploaded_file is not None:
