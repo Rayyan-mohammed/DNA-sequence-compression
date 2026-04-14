@@ -9,6 +9,8 @@
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
   <h3><a href="https://dna-sequence-compression.streamlit.app/">🚀 Try the Live App Here</a></h3>
+  <br>
+  <img src="image.png" alt="DNA Sequence App Interface" width="800">
 </div>
 
 <br>
