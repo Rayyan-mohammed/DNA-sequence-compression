@@ -7,6 +7,8 @@
   ![Bioinformatics](https://img.shields.io/badge/Bioinformatics-O(n)_Complexity-success?style=for-the-badge)
   ![Plotly](https://img.shields.io/badge/Plotly-Data_Viz-indigo?style=for-the-badge&logo=plotly)
   ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+
+  <h3><a href="https://dna-sequence-compression.streamlit.app/">🚀 Try the Live App Here</a></h3>
 </div>
 
 <br>
